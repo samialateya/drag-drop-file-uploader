@@ -5,7 +5,6 @@ import { uploadFiles, deleteFile, updateFile } from "./helpers/FileHelper.js";
 const fileElement = document.querySelector('#file-element');
 const dropArea = document.querySelector('#drop-area');
 let deleteButtons; //will be defined after the files are dropped
-let updateButtons; //will be defined when the user drops a file
 
 //catch and handle 'dragenter', 'dragover', 'dragleave', 'drop'
 const dragEvents = ['dragenter', 'dragover', 'dragleave', 'drop'];
@@ -42,7 +41,7 @@ fileElement.addEventListener('change', async function (e) {
 		await getFileContent(file);
 	}
 	//render the files to the gallery and upload to server
-	uploadFiles(filesData);
+	await uploadFiles(filesData);
 
 	//register event listers for delete file buttons
 	registerDeleteButtonsLeinster();
@@ -100,7 +99,6 @@ function registerDeleteButtonsLeinster() {
 		button.addEventListener('click', function (event) {
 			//delete the file from the filesData array
 			const fileId = event.target.dataset.id;
-			filesData = filesData.filter(file => file.id != fileId);
 			//change button loading state to loading
 			isLoading(button, true, 'Delete');
 			//delete the file from the server and from the gallery

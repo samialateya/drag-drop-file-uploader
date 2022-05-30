@@ -15,15 +15,23 @@ export async function uploadFiles(filesData) {
 	});
 
 	//*upload file to database
-	filesData.forEach(async (file) => {
-		//?upload file to server if the uploaded status is false
-		if (!file.uploaded) {
-			const response = await saveImageToServer(file);
-			//update the uploaded status to true
-			file.uploaded = true;
-			//set server id to file
-			// file.id = response.data.id;
-		}
+	return new Promise(async (resolve, reject) => {
+		filesData.forEach(async (file, key) => {
+			//?upload file to server if the uploaded status is false
+			if (!file.uploaded) {
+				try{
+					const response = await saveImageToServer(file);
+					//?if the upload was successful, update the uploaded status
+					filesData[key].serverID = response.data.id ?? null;
+					filesData[key].uploaded = true;
+					//resolve the promise
+					resolve();
+				} 
+				catch (error) {
+					resolve();
+				}
+			}
+		});
 	});
 }
 
@@ -60,12 +68,23 @@ function base64ToBlob(base64) {
 export function deleteFile(fileID, filesData) {
 	return new Promise(async (resolve, reject) => {
 
-		const response = await (new APIHelper()).post('/user/profile/'+fileID, {}, { 'Authorization': `Bearer 1|hV9Hk6P1azENWQc1psJ1I7z6dLBS6Bprbovwi2yV` });
+		//catch server id from files data
+		const serverID = filesData.find(file => file.id == fileID).serverID;
 		//clear rendering area
 		clearGallery();
-		//*loop through the files and preview them
-		filesData.forEach((file) => { renderFile(file); });
-		resolve(response);
+		//*loop through the files and preview them and exclude the current deleted file
+		filesData.forEach((file) => { 
+			if (file.id != fileID) {
+				renderFile(file); 
+			}
+		});
+		try{
+			const response = await (new APIHelper()).post('/user/profile/'+serverID, {}, { 'Authorization': `Bearer 1|hV9Hk6P1azENWQc1psJ1I7z6dLBS6Bprbovwi2yV` });
+			resolve(response);
+		}
+		catch(error){
+			resolve(error);
+		}
 	});
 }
 
@@ -79,9 +98,13 @@ export function updateFile(fileID, filesData) {
 		const formData = new FormData();
 		formData.append('tag', file.tag);
 		formData.append('name', file.name);
-		formData.append('id', file.id);
-
-		const response = await (new APIHelper()).post('/user/profile/update', formData, { 'Authorization': `Bearer 1|hV9Hk6P1azENWQc1psJ1I7z6dLBS6Bprbovwi2yV` });
-		resolve(response);
+		formData.append('id', file.serverID);
+		try{
+			const response = await (new APIHelper()).post('/user/profile/update', formData, { 'Authorization': `Bearer 1|hV9Hk6P1azENWQc1psJ1I7z6dLBS6Bprbovwi2yV` });
+			resolve(response);
+		}
+		catch(error){
+			resolve(error);
+		}
 	});
 }
