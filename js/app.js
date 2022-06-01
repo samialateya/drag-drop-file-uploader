@@ -67,7 +67,7 @@ async function handleDrop(e) {
 		await getFileContent(file);
 	}
 	//render the files to the gallery and upload to server
-	uploadFiles(filesData);
+	await uploadFiles(filesData);
 
 	//register event listers for delete file buttons
 	registerDeleteButtonsLeinster();
